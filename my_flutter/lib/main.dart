@@ -1,40 +1,48 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-void main() => runApp(MyApp());
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:my_flutter/pages/home_page.dart';
+import 'package:provider/provider.dart';
+
+import 'DioCreator.dart';
+import 'User.dart';
+import 'models/like_num_model.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+var color = Colors.red;
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  final likeNumModel = LikeNumModel();
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or press Run > Flutter Hot Reload in a Flutter IDE). Notice that the
-        // counter didn't reset back to zero; the application is not restarted.
-        primarySwatch: Colors.blue,
+    return Provider<int>.value(
+      value: null,
+      child: ChangeNotifierProvider.value(
+          value: likeNumModel,
+          child: MaterialApp(
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+                visualDensity: VisualDensity.adaptivePlatformDensity,
+              ),
+              home: Scaffold(
+                appBar: AppBar(title: Text('Zhu')),
+                body: Center(
+                  child: HomePage(),
+                ),
+              ) //MyHomePage(title: 'Flutter Demo Home Page'),
+          )
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -45,49 +53,151 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       _counter++;
+
+      execute(() => print("函数作为参数"));
+
+      Future.delayed(new Duration(seconds: 2), () {
+        return "hello world ";
+      }).then((value) {
+        print(value);
+      }).whenComplete(() => print("complete !")); // whenCoplete 一定会执行
+
+      // getData();
+      // postData();
+      // testGet();
+      // testFuture();
+
+      test();
     });
+  }
+
+  // 函数作为参数传递
+  void execute(var callback) {
+    callback();
+  }
+
+  void getData() async {
+    BaseOptions options = new BaseOptions(
+        baseUrl: "http://www.imooc.com/",
+        connectTimeout: 20000,
+        receiveTimeout: 20000);
+    Dio dio = new Dio(options);
+
+    Response response =
+    await dio.get("api/teacher", queryParameters: {"type": 4, "num": 2});
+    print("res : " + response.data.toString());
+  }
+
+  void postData() async {
+    DioCreator dioCreator = DioCreator.instance;
+    dioCreator.setPersistCookieJar();
+    Dio dio = dioCreator.getDio();
+
+    Response response = await dio.post("api/customer/v2/login", data: {
+      "loginName": "13412221222",
+      "encryptPasswd":
+      "ac0oxQRHgloQ936h5WanRTUI8bUoeayc/kGrB9Qti/5zIqlVG2YQA3UO3/fmo5awPEPfvg0AF+1QNwSZRicB8RFMV4xCqf17N8+yRZw8Tw63+5HHyz6W0wPpwqAvLTDXU5Z3mQ7UFovtk/reZrsSKOp+id55qJFVjxp0iBAwSUs=",
+      "source": "A",
+      "deviceId": "f60a5f83-395a-4f11-aa52-6ed2a244b1f7",
+      "sms": false
+    });
+    print("result : " + response.data.toString());
+
+    // String ss = convert.jsonEncode(response.data);
+    // Map<String, dynamic> map = convert.jsonDecode(ss);
+    // print("----------------ss = $ss");
+    // print("----------------map code = ${map.keys}");
+    //
+    // LoginRes loginRes = LoginRes();
+    // loginRes.fromJson(map);
+    // print("loginRes >>> ${loginRes.result.name}");
+
+    // testGet();
+    testRequest();
+  }
+
+  void test() {
+    DioCreator dioCreator = DioCreator.instance;
+    dioCreator.request("api/customer/v2/login",
+        parameters: {
+          "loginName": "13412221222",
+          "encryptPasswd":
+          "ac0oxQRHgloQ936h5WanRTUI8bUoeayc/kGrB9Qti/5zIqlVG2YQA3UO3/fmo5awPEPfvg0AF+1QNwSZRicB8RFMV4xCqf17N8+yRZw8Tw63+5HHyz6W0wPpwqAvLTDXU5Z3mQ7UFovtk/reZrsSKOp+id55qJFVjxp0iBAwSUs=",
+          "source": "A",
+          "deviceId": "f60a5f83-395a-4f11-aa52-6ed2a244b1f7",
+          "sms": false
+        },
+        method: "POST", onSuccess: (data) {
+          print("data ====== $data");
+
+          // String ss = convert.jsonEncode(data);
+          // Map<String, dynamic> map = convert.jsonDecode(ss);
+          // print("----------------ss = $ss");
+          // print("----------------map code = ${map["code"]}");
+          //
+          // LoginRes loginRes = LoginRes();
+          // loginRes.fromJson(map);
+          // print("loginRes >>> ${loginRes.result.name}");
+        }, onError: (err) {
+          print("e $err");
+        });
+  }
+
+  void testGet() async {
+    DioCreator dioCreator = DioCreator.instance;
+    var dio = dioCreator.getDio();
+    // 下面是设置Cookie的方法，
+    List<Cookie> cookies = new List();
+    cookies.add(Cookie(
+        "za_ciid",
+        "ATqOSAAAAAAAAcsBaHR0cHM6Ly9pbWFnZS56dWlmdWxpLmNvbS8xNC8yMDE4MTEzMC85NDQzYmExNGRmZDA5OTZlZThkM"
+            "2QyYTk4YWE4MmFhMS5qcGcAAf3LFgAAAAAAAIN+HwAAAAAAAQEAAAABZe5rgh8AAAAAAAExMzQxMjIyMTIysgEAamF2YS51dGlsLkRhdOUB6ytKPHYBAAABhO"
+            "acseaxn+a2mwH9yxYAAAAAAAAB/csWAAAAAAAAAQIBoSYRAAAAAAABgkEBAAAAAAA="));
+    cookies.add(Cookie("za_itid",
+        "ZuSERPHLSovGlKZxO8CtBaNS/D4r1a45c3z33paVQTn2U6CIFvO/e+xfrGQtbailiI3gWSM3W9bXmKAZUN3iYw=="));
+    cookies.add(Cookie("_orgCustId",
+        "ZZz4Z3GkKT6UfiLUiNPOxTku3gq+4Lr5s9AzvdqzghtGSLPvXrCJMiu2ZDHH0Dh8DvmHk3imO4rgY4QzyUf7h5Q=="));
+    // dioCreator.setCookies(dio.options.baseUrl, cookies);
+
+    Response response =
+    await dio.get("https://t-api.zuifuli.com/api/website/v2/meeting/today");
+
+    Future.delayed(new Duration(seconds: 4), () {
+      dioCreator.printCookies();
+    });
+  }
+
+  void testRequest() {
+    DioCreator dioCreator = DioCreator.instance;
+    dioCreator.request("https://t-api.zuifuli.com/api/website/v2/meeting/today",
+        parameters: {}, method: "GET", onSuccess: (data) {
+          print("data ====== $data");
+        }, onError: (err) {
+          print("e $err");
+        });
+  }
+
+  void testFuture() {
+    User user = User();
+    user.getPersistCookieJar();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
@@ -100,11 +210,12 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
